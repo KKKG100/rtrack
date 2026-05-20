@@ -60,52 +60,71 @@ async function predict() {
     const drawingUtils = new DrawingUtils(ctx)
 
     async function frame() {
-        if (!running) return
 
-        const now = performance.now()
+    if (!running) return
 
-        const result = poseLandmarker.detectForVideo(video, now)
+    const now = performance.now()
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
+    const result = poseLandmarker.detectForVideo(
+        video,
+        now
+    )
 
-        if (result.landmarks.length > 0) {
-            const landmarks = result.landmarks[0]
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    )
 
-            drawingUtils.drawLandmarks(landmarks)
-            drawingUtils.drawConnectors(
-                landmarks,
-                PoseLandmarker.POSE_CONNECTIONS
-            )
+    console.log(result)
 
-            const important = {
-                head: normalizePoint(landmarks[0]),
+    if (
+        result &&
+        result.landmarks &&
+        result.landmarks[0]
+    ) {
 
-                leftShoulder: normalizePoint(landmarks[11]),
-                rightShoulder: normalizePoint(landmarks[12]),
+        const landmarks = result.landmarks[0]
 
-                leftElbow: normalizePoint(landmarks[13]),
-                rightElbow: normalizePoint(landmarks[14]),
+        const important = {
 
-                leftHand: normalizePoint(landmarks[15]),
-                rightHand: normalizePoint(landmarks[16]),
+            head: landmarks[0],
 
-                leftHip: normalizePoint(landmarks[23]),
-                rightHip: normalizePoint(landmarks[24]),
+            leftShoulder: landmarks[11],
+            rightShoulder: landmarks[12],
 
-                leftKnee: normalizePoint(landmarks[25]),
-                rightKnee: normalizePoint(landmarks[26]),
+            leftElbow: landmarks[13],
+            rightElbow: landmarks[14],
 
-                leftFoot: normalizePoint(landmarks[27]),
-                rightFoot: normalizePoint(landmarks[28])
-            }
+            leftHand: landmarks[15],
+            rightHand: landmarks[16],
 
-            if (socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify(important))
-            }
+            leftHip: landmarks[23],
+            rightHip: landmarks[24],
+
+            leftKnee: landmarks[25],
+            rightKnee: landmarks[26],
+
+            leftFoot: landmarks[27],
+            rightFoot: landmarks[28]
         }
 
-        requestAnimationFrame(frame)
+        if (
+            socket.readyState === WebSocket.OPEN
+        ) {
+
+            socket.send(
+                JSON.stringify(important)
+            )
+
+        }
+
+        console.log("SENT")
     }
+
+    requestAnimationFrame(frame)
+}
 
     frame()
 }
